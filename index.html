@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Emoji Memory Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .game-container {
+            text-align: center;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+        }
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 10px;
+            margin-bottom: 20px;
+        }
+        .card {
+            aspect-ratio: 1;
+            background-color: #3498db;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 48px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            border-radius: 10px;
+        }
+        .card.flipped {
+            background-color: #2ecc71;
+        }
+        .card.matched {
+            background-color: #95a5a6;
+            cursor: default;
+        }
+        #score, #attempts {
+            margin: 10px;
+            font-size: 18px;
+        }
+        #reset-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #victory-message {
+            display: none;
+            color: #2ecc71;
+            font-size: 24px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Emoji Memory Game</h1>
+        <div id="score">Score: 0</div>
+        <div id="attempts">Attempts: 0</div>
+        <div id="victory-message">Congratulations! You won the game!</div>
+        <div class="game-board" id="game-board"></div>
+        <button id="reset-btn">New/Reset Game</button>
+    </div>
+
+    <script>
+        const emojis = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼'];
+        let gameBoard, cards, flippedCards, matchedPairs, attempts, score;
+
+        function initGame() {
+            gameBoard = document.getElementById('game-board');
+            const scoreElement = document.getElementById('score');
+            const attemptsElement = document.getElementById('attempts');
+            const victoryMessage = document.getElementById('victory-message');
+            const resetBtn = document.getElementById('reset-btn');
+
+            attempts = 0;
+            score = 0;
+            flippedCards = [];
+            matchedPairs = 0;
+
+            victoryMessage.style.display = 'none';
+            const shuffledEmojis = [...emojis, ...emojis]
+                .sort(() => Math.random() - 0.5);
+
+            gameBoard.innerHTML = '';
+            shuffledEmojis.forEach((emoji, index) => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.dataset.emoji = emoji;
+                card.addEventListener('click', handleCardClick);
+                gameBoard.appendChild(card);
+            });
+
+            cards = document.querySelectorAll('.card');
+            scoreElement.textContent = `Score: ${score}`;
+            attemptsElement.textContent = `Attempts: ${attempts}`;
+        }
+
+        function handleCardClick(event) {
+            const clickedCard = event.target;
+
+            if (clickedCard.classList.contains('matched') || 
+                flippedCards.includes(clickedCard) || 
+                flippedCards.length === 2) return;
+
+            clickedCard.textContent = clickedCard.dataset.emoji;
+            clickedCard.classList.add('flipped');
+            flippedCards.push(clickedCard);
+
+            if (flippedCards.length === 2) {
+                attempts++;
+                document.getElementById('attempts').textContent = `Attempts: ${attempts}`;
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            const [card1, card2] = flippedCards;
+
+            if (card1.dataset.emoji === card2.dataset.emoji) {
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                score += 10;
+                document.getElementById('score').textContent = `Score: ${score}`;
+                matchedPairs++;
+
+                if (matchedPairs === emojis.length) {
+                    setTimeout(() => {
+                        document.getElementById('victory-message').style.display = 'block';
+                    }, 500);
+                }
+            } else {
+                setTimeout(() => {
+                    card1.textContent = '';
+                    card2.textContent = '';
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                }, 1000);
+            }
+
+            flippedCards = [];
+        }
+
+        document.getElementById('reset-btn').addEventListener('click', initGame);
+
+        initGame();
+    </script>
+</body>
+</html>
